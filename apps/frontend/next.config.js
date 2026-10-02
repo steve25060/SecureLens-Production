@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
   /**
    * API Rewrites - Proxy all /api/* requests to the NestJS backend
    *
