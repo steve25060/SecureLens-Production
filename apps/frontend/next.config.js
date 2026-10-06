@@ -1,25 +1,13 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  /**
-   * API Rewrites - Proxy all /api/* requests to the NestJS backend
-   *
-   * LOCAL:
-   *   - Frontend: http://localhost:3000
-   *   - Backend: http://localhost:4000
-   *   - Proxy: /api/* → http://localhost:4000/api/*
-   *
-   * PRODUCTION (Railway):
-   *   - Frontend: https://<your-railway-frontend-url>
-   *   - Backend: https://<your-railway-backend-url>
-   *   - Uses internal domain: http://scintillating-strength.railway.internal:8080
-   *
-   * Set NEXT_PUBLIC_BACKEND_URL in .env to control backend URL
-   */
+
+const isGitHubPages = process.env.GITHUB_PAGES === 'true';
+const repoName = 'SecureLens-Production';
+
+const normalConfig = {
   async rewrites() {
     let backendUrl =
       process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000';
 
-    // Ensure backendUrl starts with http://, https://, or /
     if (
       !backendUrl.startsWith('http://') &&
       !backendUrl.startsWith('https://') &&
@@ -27,9 +15,9 @@ const nextConfig = {
     ) {
       backendUrl = `https://${backendUrl}`;
     }
+
     backendUrl = backendUrl.replace(/\/+$/, '');
 
-    // Use rewrites for all environments
     return [
       {
         source: '/api/:path*',
@@ -37,8 +25,18 @@ const nextConfig = {
       },
     ];
   },
+};
 
-  // Allowed domains for images
+const nextConfig = {
+  ...(isGitHubPages
+    ? {
+        output: 'export',
+        basePath: `/${repoName}`,
+        assetPrefix: `/${repoName}/`,
+        trailingSlash: true,
+      }
+    : normalConfig),
+
   images: {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },
@@ -49,13 +47,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
     ],
-    unoptimized: true, // Unoptimize all images for better compatibility
+    unoptimized: true,
   },
 
-  // Ensure static files in public folder are served correctly
   staticPageGenerationTimeout: 1000,
   compress: true,
 };
 
 module.exports = nextConfig;
-// Force rebuild - Demo gallery deployment fix
